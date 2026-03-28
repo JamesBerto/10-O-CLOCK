@@ -41,6 +41,30 @@ function getCurrentSectionIndex() {
 	return nearestIndex;
 }
 
+function updateActiveSectionState() {
+	if (!sectionTargets.length) {
+		return;
+	}
+
+	sectionTargets.forEach((section, index) => {
+		section.classList.toggle("is-current-section", index === currentSectionIndex);
+	});
+}
+
+function syncScrollStateFromPosition() {
+	currentSectionIndex = getCurrentSectionIndex();
+	const isBeyondLogoSection = currentSectionIndex > 0 || window.scrollY >= FIRST_SCROLL_REVEAL_PX;
+
+	hasStartedScroll = isBeyondLogoSection;
+	document.body.classList.toggle("has-started-scroll", hasStartedScroll);
+
+	if (hasStartedScroll) {
+		revealAllText();
+	}
+
+	updateActiveSectionState();
+}
+
 function scrollToSection(index) {
 	if (!sectionTargets.length) {
 		return;
@@ -60,6 +84,7 @@ function scrollToSection(index) {
 	}
 
 	currentSectionIndex = targetIndex;
+	updateActiveSectionState();
 	targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -108,6 +133,7 @@ function updateHeaderState() {
 	}
 
 	currentSectionIndex = getCurrentSectionIndex();
+	updateActiveSectionState();
 }
 
 function onKeyDown(event) {
@@ -138,6 +164,7 @@ function onKeyUp(event) {
 function setupSectionNavigation() {
 	sectionTargets = SECTION_IDS.map((id) => document.getElementById(id)).filter(Boolean);
 	currentSectionIndex = getCurrentSectionIndex();
+	updateActiveSectionState();
 }
 
 function onScroll() {
@@ -193,11 +220,27 @@ window.addEventListener("scroll", onScroll, { passive: true });
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", onKeyUp);
 window.addEventListener("resize", updateHeaderState);
+window.addEventListener("pageshow", () => {
+	window.requestAnimationFrame(() => {
+		syncScrollStateFromPosition();
+		updateHeaderState();
+	});
+});
 window.addEventListener("load", () => {
 	removeIndexFromUrl();
-	document.body.classList.toggle("has-started-scroll", window.scrollY >= FIRST_SCROLL_REVEAL_PX);
-	hasStartedScroll = document.body.classList.contains("has-started-scroll");
 	setupSectionNavigation();
-	updateHeaderState();
 	setupMiddleReveal();
+	syncScrollStateFromPosition();
+	updateHeaderState();
+
+	// Browser scroll restoration can happen after load; resync once immediately and once shortly after.
+	window.requestAnimationFrame(() => {
+		syncScrollStateFromPosition();
+		updateHeaderState();
+	});
+
+	window.setTimeout(() => {
+		syncScrollStateFromPosition();
+		updateHeaderState();
+	}, 180);
 });
