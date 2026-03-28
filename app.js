@@ -13,6 +13,7 @@ let currentSectionIndex = 0;
 let activeNavKey = null;
 let touchStartX = 0;
 let touchStartY = 0;
+let touchStartScrollY = 0;
 let touchStartedOnInteractive = false;
 
 if ("scrollRestoration" in history) {
@@ -182,11 +183,17 @@ function onTouchStart(event) {
 	const firstTouch = event.changedTouches[0];
 	touchStartX = firstTouch.clientX;
 	touchStartY = firstTouch.clientY;
+	touchStartScrollY = window.scrollY;
 	touchStartedOnInteractive = isInteractiveElement(event.target);
 }
 
 function onTouchEnd(event) {
 	if (!event.changedTouches.length || touchStartedOnInteractive) {
+		return;
+	}
+
+	// If native touch scrolling already moved the page, avoid forcing a second snap.
+	if (Math.abs(window.scrollY - touchStartScrollY) > 18) {
 		return;
 	}
 

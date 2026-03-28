@@ -493,6 +493,16 @@ body:not(.has-started-scroll) .content-stack {
 		--logo-min-image-width: 0px;
 	}
 
+	html,
+	body {
+		scroll-snap-type: y proximity;
+	}
+
+	.page-step,
+	.logo-panel {
+		scroll-snap-stop: normal;
+	}
+
 	.fullscreen-image {
 		width: min(94vw, 850px);
 		height: 60vh;
