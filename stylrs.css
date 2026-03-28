@@ -31,6 +31,9 @@ body {
 	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 	scrollbar-width: none;
 	-ms-overflow-style: none;
+	scroll-snap-type: y mandatory;
+	-webkit-overflow-scrolling: touch;
+	touch-action: pan-y;
 }
 
 body::-webkit-scrollbar {

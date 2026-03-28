@@ -9,6 +9,9 @@ let hasStartedScroll = false;
 let sectionTargets = [];
 let currentSectionIndex = 0;
 let activeNavKey = null;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartedOnInteractive = false;
 
 if ("scrollRestoration" in history) {
 	history.scrollRestoration = "auto";
@@ -161,6 +164,48 @@ function onKeyUp(event) {
 	}
 }
 
+function isInteractiveElement(target) {
+	if (!target || !(target instanceof Element)) {
+		return false;
+	}
+
+	return Boolean(target.closest("a, button, input, textarea, select, label"));
+}
+
+function onTouchStart(event) {
+	if (!event.changedTouches.length) {
+		return;
+	}
+
+	const firstTouch = event.changedTouches[0];
+	touchStartX = firstTouch.clientX;
+	touchStartY = firstTouch.clientY;
+	touchStartedOnInteractive = isInteractiveElement(event.target);
+}
+
+function onTouchEnd(event) {
+	if (!event.changedTouches.length || touchStartedOnInteractive) {
+		return;
+	}
+
+	const endTouch = event.changedTouches[0];
+	const deltaX = endTouch.clientX - touchStartX;
+	const deltaY = endTouch.clientY - touchStartY;
+	const absX = Math.abs(deltaX);
+	const absY = Math.abs(deltaY);
+
+	// Only treat strong vertical gestures as section navigation swipes.
+	if (absY < 46 || absY <= absX * 1.1) {
+		return;
+	}
+
+	if (deltaY < 0) {
+		moveToAdjacentSection(1);
+	} else {
+		moveToAdjacentSection(-1);
+	}
+}
+
 function setupSectionNavigation() {
 	sectionTargets = SECTION_IDS.map((id) => document.getElementById(id)).filter(Boolean);
 	currentSectionIndex = getCurrentSectionIndex();
@@ -219,6 +264,8 @@ function setupMiddleReveal() {
 window.addEventListener("scroll", onScroll, { passive: true });
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", onKeyUp);
+window.addEventListener("touchstart", onTouchStart, { passive: true });
+window.addEventListener("touchend", onTouchEnd, { passive: true });
 window.addEventListener("resize", updateHeaderState);
 window.addEventListener("pageshow", () => {
 	window.requestAnimationFrame(() => {
