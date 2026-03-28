@@ -3,6 +3,8 @@ const REVEAL_FALLBACK_SCROLL_PX = 70;
 const FIRST_SCROLL_REVEAL_PX = 12;
 const HINT_SHOW_PROGRESS_MAX = 0.14;
 const SECTION_IDS = ["logo-section", "info-section", "more-section"];
+const SWIPE_MIN_DISTANCE_PX = 28;
+const SWIPE_VERTICAL_WEIGHT = 0.85;
 let isTicking = false;
 let revealItems = [];
 let hasStartedScroll = false;
@@ -195,7 +197,7 @@ function onTouchEnd(event) {
 	const absY = Math.abs(deltaY);
 
 	// Only treat strong vertical gestures as section navigation swipes.
-	if (absY < 46 || absY <= absX * 1.1) {
+	if (absY < SWIPE_MIN_DISTANCE_PX || absY <= absX * SWIPE_VERTICAL_WEIGHT) {
 		return;
 	}
 
